@@ -61,6 +61,7 @@ pub trait Transport<'b>: Sized + fmt::Debug + Send {
 #[async_trait]
 pub trait Token: Sized + fmt::Debug + Sync + Send {
     type Id: Sized + fmt::Debug + Sync + Send;
+    type Info: Sized + fmt::Debug + Sync + Send;
 
     fn has_button(&self) -> bool {
         true
@@ -68,6 +69,9 @@ pub trait Token: Sized + fmt::Debug + Sync + Send {
 
     /// Gets the transport layer used for communication with this token.
     fn get_transport(&self) -> AuthenticatorTransport;
+
+    /// Gets device and platform-specific information about the token.
+    fn get_info(&self) -> Self::Info;
 
     /// Transmit a CBOR message to a token, and deserialises the response.
     async fn transmit<'a, C, R, U>(&mut self, cmd: C, ui: &U) -> Result<R, WebauthnCError>

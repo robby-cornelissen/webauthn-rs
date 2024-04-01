@@ -209,6 +209,7 @@ impl USBToken {
 impl Token for USBToken {
     // TODO: platform code
     type Id = <USBDeviceInfoImpl as USBDeviceInfo>::Id;
+    type Info = USBDeviceInfoImpl;
 
     async fn transmit_raw<U>(&mut self, cmd: &[u8], ui: &U) -> Result<Vec<u8>, WebauthnCError>
     where
@@ -310,6 +311,10 @@ impl Token for USBToken {
 
     fn get_transport(&self) -> AuthenticatorTransport {
         AuthenticatorTransport::Usb
+    }
+
+    fn get_info(&self) -> Self::Info {
+        self.device.get_info().clone()
     }
 
     async fn cancel(&mut self) -> Result<(), WebauthnCError> {

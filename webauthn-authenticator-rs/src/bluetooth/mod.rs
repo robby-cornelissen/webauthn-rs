@@ -455,9 +455,13 @@ impl BluetoothToken {
     }
 }
 
+#[derive(Debug)]
+pub struct BluetoothTokenInfo {}
+
 #[async_trait]
 impl Token for BluetoothToken {
     type Id = PeripheralId;
+    type Info = BluetoothTokenInfo;
 
     async fn transmit_raw<U>(&mut self, cmd: &[u8], ui: &U) -> Result<Vec<u8>, WebauthnCError>
     where
@@ -656,6 +660,10 @@ impl Token for BluetoothToken {
             self.device.disconnect().await?;
         }
         Ok(())
+    }
+
+    fn get_info(&self) -> Self::Info {
+        BluetoothTokenInfo {}
     }
 
     fn get_transport(&self) -> AuthenticatorTransport {
