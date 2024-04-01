@@ -564,9 +564,13 @@ impl NFCCard {
     }
 }
 
+#[derive(Debug)]
+pub struct NFCCardInfo {}
+
 #[async_trait]
 impl Token for NFCCard {
     type Id = CString;
+    type Info = NFCCardInfo;
 
     fn has_button(&self) -> bool {
         false
@@ -666,6 +670,10 @@ impl Token for NFCCard {
 
     fn get_transport(&self) -> AuthenticatorTransport {
         AuthenticatorTransport::Nfc
+    }
+
+    fn get_info(&self) -> Self::Info {
+        NFCCardInfo {}
     }
 
     async fn cancel(&mut self) -> Result<(), WebauthnCError> {

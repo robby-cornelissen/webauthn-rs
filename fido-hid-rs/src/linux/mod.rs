@@ -5,6 +5,7 @@ mod wrapper;
 
 use std::{
     collections::HashSet,
+    ffi::OsStr,
     fs::{File, OpenOptions},
     io::{Read, Write},
     mem::size_of,
@@ -173,8 +174,13 @@ impl USBDeviceManager for USBDeviceManagerImpl {
 #[derive(Clone, Debug)]
 pub struct USBDeviceInfoImpl {
     path: Box<Path>,
-    vendor: u16,
-    product: u16,
+    vendor_id: u16,
+    product_id: u16,
+    version: Option<String>,
+    manufacturer: Option<String>,
+    product: Option<String>,
+    name: Option<String>,
+    serial: Option<String>,
 }
 
 impl USBDeviceInfoImpl {
@@ -228,11 +234,39 @@ impl USBDeviceInfoImpl {
 
         // trace!("raw descriptor: {}", hex::encode(descriptor.get_value()));
         if is_fido_authenticator(descriptor.get_value()) {
+            // get additional information from the parent USB device
+            let mut manufacturer: Option<String> = None;
+            let mut product: Option<String> = None;
+            let mut version: Option<String> = None;
+
+            if let Ok(Some(usb_parent_device)) =
+                device.parent_with_subsystem_devtype("usb", "usb_device")
+            {
+                manufacturer = attribute_as_string(&usb_parent_device, "manufacturer");
+                product = attribute_as_string(&usb_parent_device, "product");
+                version =
+                    attribute_as_u16(&usb_parent_device, "bcdDevice").map(u16_to_version_string);
+            }
+
+            // get additional information from the parent HID device
+            let mut name: Option<String> = None;
+            let mut serial: Option<String> = None;
+
+            if let Ok(Some(hid_parent_device)) = device.parent_with_subsystem("hid") {
+                name = property_as_string(&hid_parent_device, "HID_NAME");
+                serial = property_as_string(&hid_parent_device, "HID_UNIQ");
+            }
+
             Some(USBDeviceInfoImpl {
                 path: path.into(),
                 // The userspace API lies: https://bugzilla.kernel.org/show_bug.cgi?id=217463
-                vendor: info.vendor as u16,
-                product: info.product as u16,
+                vendor_id: info.vendor as u16,
+                product_id: info.product as u16,
+                version,
+                manufacturer,
+                product,
+                name,
+                serial,
             })
         } else {
             // trace!("{path:?} does not look like a FIDO authenticator");
@@ -287,4 +321,35 @@ impl USBDevice for USBDeviceImpl {
             Ok(())
         }
     }
+}
+
+fn property_as_string(device: &Device, property_name: &str) -> Option<String> {
+    device
+        .property_value(property_name)
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+}
+
+fn attribute_as_string(device: &Device, attribute_name: &str) -> Option<String> {
+    device
+        .attribute_value(attribute_name)
+        .and_then(OsStr::to_str)
+        .map(str::to_string)
+}
+
+fn attribute_as_u16(device: &Device, attribute_name: &str) -> Option<u16> {
+    device
+        .attribute_value(attribute_name)
+        .and_then(OsStr::to_str)
+        .and_then(|v| u16::from_str_radix(v, 16).ok())
+}
+
+/// Converts a BCD value of the format `0xJJMN` to a version string, where 
+/// `JJ` represents the major version, `M` the minor version, and `N` the sub-minor version.
+fn u16_to_version_string(u16: u16) -> String {
+    let [major, minors] = u16.to_be_bytes();
+    let minor = minors >> 4;
+    let sub_minor = minors & 0x0F;
+
+    format!("{major}.{minor}.{sub_minor}")
 }

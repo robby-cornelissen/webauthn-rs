@@ -52,6 +52,18 @@ pub enum AnyTokenId {
     Usb(<USBToken as Token>::Id),
 }
 
+#[derive(Debug)]
+pub enum AnyTokenInfo {
+    /// No-op stub entry, never used.
+    Stub,
+    #[cfg(any(all(doc, not(doctest)), feature = "bluetooth"))]
+    Bluetooth(<BluetoothToken as Token>::Info),
+    #[cfg(any(all(doc, not(doctest)), feature = "nfc"))]
+    Nfc(<NFCCard as Token>::Info),
+    #[cfg(any(all(doc, not(doctest)), feature = "usb"))]
+    Usb(<USBToken as Token>::Info),
+}
+
 impl AnyTransport {
     /// Creates connections to all available transports.
     ///
@@ -234,6 +246,7 @@ impl<'b> Transport<'b> for AnyTransport {
 #[allow(clippy::unimplemented)]
 impl Token for AnyToken {
     type Id = AnyTokenId;
+    type Info = AnyTokenInfo;
 
     #[allow(unused_variables)]
     async fn transmit_raw<U>(&mut self, cmd: &[u8], ui: &U) -> Result<Vec<u8>, WebauthnCError>
@@ -284,6 +297,18 @@ impl Token for AnyToken {
             AnyToken::Nfc(n) => n.get_transport(),
             #[cfg(feature = "usb")]
             AnyToken::Usb(u) => u.get_transport(),
+        }
+    }
+
+    fn get_info(&self) -> Self::Info {
+        match self {
+            AnyToken::Stub => unimplemented!(),
+            #[cfg(feature = "bluetooth")]
+            AnyToken::Bluetooth(b) => AnyTokenInfo::Bluetooth(b.get_info()),
+            #[cfg(feature = "nfc")]
+            AnyToken::Nfc(n) => AnyTokenInfo::Nfc(n.get_info()),
+            #[cfg(feature = "usb")]
+            AnyToken::Usb(u) => AnyTokenInfo::Usb(u.get_info()),
         }
     }
 
