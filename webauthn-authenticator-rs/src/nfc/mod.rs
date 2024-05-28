@@ -261,6 +261,7 @@ impl NFCDeviceWatcher {
                     {
                         // TODO: The card could have been captured by something
                         // else, and we try again later.
+                        // TODO: Or... the card could have been captured by us...
                         trace!("ignoring in-use card");
                         continue;
                     }
@@ -273,7 +274,8 @@ impl NFCDeviceWatcher {
                             tasks.push(tokio::spawn(async move {
                                 match card.init().await {
                                     Ok(()) => {
-                                        let _ = tx.send(TokenEvent::Added(card)).await;
+                                        let id = card.reader_name.clone();
+                                        let _ = tx.send(TokenEvent::Added(id, card)).await;
                                     }
                                     Err(e) => {
                                         error!("initialising card: {e:?}");

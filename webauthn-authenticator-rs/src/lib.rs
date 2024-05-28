@@ -130,6 +130,8 @@ mod crypto;
 pub mod ctap2;
 pub mod error;
 #[cfg(any(all(doc, not(doctest)), feature = "ctap2"))]
+pub mod manager;
+#[cfg(any(all(doc, not(doctest)), feature = "ctap2"))]
 pub mod transport;
 pub mod types;
 pub mod ui;

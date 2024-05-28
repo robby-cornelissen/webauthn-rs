@@ -34,7 +34,7 @@ where
     T: USBDeviceInfo,
 {
     /// A new device was connected.
-    Added(T),
+    Added(T::Id, T),
     /// An existing device was disconnected.
     Removed(T::Id),
     /// Initial enumeration of existing devices completed.

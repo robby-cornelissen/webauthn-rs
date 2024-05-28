@@ -422,7 +422,7 @@ pub async fn select_one_device<'a, T: Token + 'a, U: UiCallback + 'a>(
                         trace!("now enumerated");
                         enumerated = true;
                     },
-                    TokenEvent::Added(token) => {
+                    TokenEvent::Added(_, token) => {
                         trace!("added: {token:?}");
                         let local_enumerated = enumerated;
                         let mut authenticator = if let Some(a) = CtapAuthenticator::new(token, ui_callback).await {
@@ -484,7 +484,7 @@ pub async fn select_one_device_predicate<'a, T: Token + 'a, U: UiCallback + 'a>(
                         trace!("now enumerated");
                         enumerated = true;
                     },
-                    TokenEvent::Added(token) => {
+                    TokenEvent::Added(_, token) => {
                         trace!("added: {token:?}");
                         let local_enumerated = enumerated;
                         let mut authenticator = if let Some(a) = CtapAuthenticator::new(token, ui_callback).await {
@@ -557,7 +557,7 @@ pub async fn select_one_device_version<
                         trace!("now enumerated");
                         enumerated = true;
                     },
-                    TokenEvent::Added(mut token) => {
+                    TokenEvent::Added(_, mut token) => {
                         trace!("added: {token:?}");
                         let local_enumerated = enumerated;
 

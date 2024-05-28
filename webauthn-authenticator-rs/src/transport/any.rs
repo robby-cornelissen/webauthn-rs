@@ -52,6 +52,22 @@ pub enum AnyTokenId {
     Usb(<USBToken as Token>::Id),
 }
 
+#[allow(clippy::unimplemented)]
+impl fmt::Display for AnyTokenId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let printable = match self {
+            AnyTokenId::Stub => unimplemented!(),
+            #[cfg(any(all(doc, not(doctest)), feature = "bluetooth"))]
+            AnyTokenId::Bluetooth(id) => id.to_string(),
+            #[cfg(any(all(doc, not(doctest)), feature = "nfc"))]
+            AnyTokenId::Nfc(id) => id.to_string_lossy().to_string(),
+            #[cfg(any(all(doc, not(doctest)), feature = "usb"))]
+            AnyTokenId::Usb(id) => id.to_string_lossy().to_string(),
+        };
+        write!(f, "{}", printable)
+    }
+}
+
 #[derive(Debug)]
 pub enum AnyTokenInfo {
     /// No-op stub entry, never used.
@@ -341,7 +357,7 @@ impl Token for AnyToken {
 impl From<TokenEvent<BluetoothToken>> for TokenEvent<AnyToken> {
     fn from(e: TokenEvent<BluetoothToken>) -> Self {
         match e {
-            TokenEvent::Added(t) => TokenEvent::Added(AnyToken::Bluetooth(t)),
+            TokenEvent::Added(i, t) => TokenEvent::Added(AnyTokenId::Bluetooth(i),AnyToken::Bluetooth(t)),
             TokenEvent::Removed(i) => TokenEvent::Removed(AnyTokenId::Bluetooth(i)),
             TokenEvent::EnumerationComplete => TokenEvent::EnumerationComplete,
         }
@@ -352,7 +368,7 @@ impl From<TokenEvent<BluetoothToken>> for TokenEvent<AnyToken> {
 impl From<TokenEvent<NFCCard>> for TokenEvent<AnyToken> {
     fn from(e: TokenEvent<NFCCard>) -> Self {
         match e {
-            TokenEvent::Added(t) => TokenEvent::Added(AnyToken::Nfc(t)),
+            TokenEvent::Added(i, t) => TokenEvent::Added(AnyTokenId::Nfc(i), AnyToken::Nfc(t)),
             TokenEvent::Removed(i) => TokenEvent::Removed(AnyTokenId::Nfc(i)),
             TokenEvent::EnumerationComplete => TokenEvent::EnumerationComplete,
         }
@@ -363,7 +379,7 @@ impl From<TokenEvent<NFCCard>> for TokenEvent<AnyToken> {
 impl From<TokenEvent<USBToken>> for TokenEvent<AnyToken> {
     fn from(e: TokenEvent<USBToken>) -> Self {
         match e {
-            TokenEvent::Added(t) => TokenEvent::Added(AnyToken::Usb(t)),
+            TokenEvent::Added(i, t) => TokenEvent::Added(AnyTokenId::Usb(i), AnyToken::Usb(t)),
             TokenEvent::Removed(i) => TokenEvent::Removed(AnyTokenId::Usb(i)),
             TokenEvent::EnumerationComplete => TokenEvent::EnumerationComplete,
         }

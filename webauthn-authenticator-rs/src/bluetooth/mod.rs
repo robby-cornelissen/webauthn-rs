@@ -202,7 +202,7 @@ impl BluetoothDeviceWatcher {
 
                         connected.insert(id);
                         if tx
-                            .send(TokenEvent::Added(BluetoothToken::new(peripheral)))
+                            .send(TokenEvent::Added(peripheral.id(), BluetoothToken::new(peripheral)))
                             .await
                             .is_err()
                         {

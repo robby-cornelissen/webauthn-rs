@@ -25,7 +25,8 @@ nfc = ["webauthn-authenticator-rs/nfc"]
 usb = ["webauthn-authenticator-rs/usb"]
 solokey = ["webauthn-authenticator-rs/vendor-solokey"]
 
-default = ["nfc", "usb"]
+# default = ["nfc", "usb"]
+default = ["nfc", "usb", "bluetooth"]
 
 [dependencies]
 webauthn-authenticator-rs = { workspace = true, features = ["ui-cli", "ctap2-management"] }

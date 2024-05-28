@@ -90,11 +90,11 @@ impl<'b> Transport<'b> for USBTransport {
         Ok(Box::pin(ret.filter_map(|event| async move {
             trace!("USB event: {event:?}");
             match event {
-                WatchEvent::Added(d) => {
+                WatchEvent::Added(i, d) => {
                     if let Ok(dev) = d.open().await {
                         let mut token = USBToken::new(dev);
                         if let Ok(()) = token.init().await {
-                            Some(TokenEvent::Added(token))
+                            Some(TokenEvent::Added(i, token))
                         } else {
                             None
                         }
