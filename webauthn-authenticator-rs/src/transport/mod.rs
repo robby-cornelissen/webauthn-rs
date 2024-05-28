@@ -24,7 +24,7 @@ pub(crate) const TYPE_INIT: u8 = 0x80;
 
 #[derive(Debug)]
 pub enum TokenEvent<T: Token> {
-    Added(T),
+    Added(T::Id, T),
     Removed(T::Id),
     EnumerationComplete,
 }

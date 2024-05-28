@@ -78,8 +78,10 @@ impl USBDeviceManager for USBDeviceManagerImpl {
             let mut known_devices = HashSet::new();
 
             for device in existing_devices {
-                known_devices.insert(device.path.to_owned());
-                if tx.blocking_send(WatchEvent::Added(device)).is_err() {
+                let id = device.path.to_owned();
+                known_devices.insert(id.clone());
+
+                if tx.blocking_send(WatchEvent::Added(id, device)).is_err() {
                     // Channel disappeared!
                     return;
                 };
@@ -115,8 +117,10 @@ impl USBDeviceManager for USBDeviceManagerImpl {
                         EventType::Add => {
                             match USBDeviceInfoImpl::new(&device) {
                                 Some(i) => {
-                                    known_devices.insert(i.path.to_owned());
-                                    if tx.blocking_send(WatchEvent::Added(i)).is_err() {
+                                    let id = i.path.to_owned();
+                                    known_devices.insert(id.clone());
+
+                                    if tx.blocking_send(WatchEvent::Added(id, i)).is_err() {
                                         // Channel disappeared!
                                         return;
                                     }

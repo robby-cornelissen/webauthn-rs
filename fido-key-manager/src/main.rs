@@ -236,7 +236,7 @@ async fn main() {
         Opt::Info(o) => {
             while let Some(event) = stream.next().await {
                 match event {
-                    TokenEvent::Added(t) => {
+                    TokenEvent::Added(_, t) => {
                         let authenticator = match CtapAuthenticator::new(t, &ui).await {
                             Some(a) => a,
                             None => continue,
@@ -269,7 +269,7 @@ async fn main() {
 
             let mut authenticator = None;
             while let Some(event) = stream.next().await {
-                if let TokenEvent::Added(t) = event {
+                if let TokenEvent::Added(_, t) = event {
                     authenticator = Some(CtapAuthenticator::new(t, &ui).await.unwrap());
                     break;
                 }
@@ -335,7 +335,7 @@ async fn main() {
         Opt::BioInfo(o) => {
             while let Some(event) = stream.next().await {
                 match event {
-                    TokenEvent::Added(t) => {
+                    TokenEvent::Added(i, t) => {
                         let mut authenticator = match CtapAuthenticator::new(t, &ui).await {
                             Some(a) => a,
                             None => continue,

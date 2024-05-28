@@ -72,7 +72,7 @@ async fn select_transport<U: UiCallback>(ui: &U) -> impl AuthenticatorBackend + 
         Ok(mut tokens) => {
             while let Some(event) = tokens.next().await {
                 match event {
-                    TokenEvent::Added(token) => {
+                    TokenEvent::Added(_, token) => {
                         let auth = CtapAuthenticator::new(token, ui).await;
 
                         if let Some(auth) = auth {
