@@ -258,10 +258,10 @@ impl NFCDeviceWatcher {
                     if state
                         .event_state()
                         .intersects(State::INUSE | State::EXCLUSIVE)
+                        && !state.event_state().contains(State::EMPTY)
                     {
                         // TODO: The card could have been captured by something
                         // else, and we try again later.
-                        // TODO: Or... the card could have been captured by us...
                         trace!("ignoring in-use card");
                         continue;
                     }
