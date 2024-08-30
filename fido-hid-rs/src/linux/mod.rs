@@ -21,6 +21,7 @@ use nix::{
     sys::signalfd::SigSet,
 };
 use num_traits::FromPrimitive;
+use serde::Serialize;
 use tokio::{sync::mpsc, task::spawn_blocking};
 use tokio_stream::wrappers::ReceiverStream;
 use udev::{Device, Enumerator, EventType, MonitorBuilder};
@@ -175,7 +176,8 @@ impl USBDeviceManager for USBDeviceManagerImpl {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct USBDeviceInfoImpl {
     path: Box<Path>,
     vendor_id: u16,

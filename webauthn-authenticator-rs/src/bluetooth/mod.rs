@@ -455,7 +455,8 @@ impl BluetoothToken {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BluetoothTokenInfo {}
 
 #[async_trait]

@@ -66,6 +66,7 @@ use crate::stubs::*;
 use async_trait::async_trait;
 use futures::executor::block_on;
 use futures::{stream::BoxStream, Stream};
+use serde::Serialize;
 use tokio::sync::mpsc;
 use tokio::task::spawn_blocking;
 use tokio_stream::wrappers::ReceiverStream;
@@ -566,7 +567,8 @@ impl NFCCard {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NFCCardInfo {}
 
 #[async_trait]

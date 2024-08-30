@@ -10,7 +10,7 @@ pub(crate) mod types;
 #[cfg(any(all(doc, not(doctest)), feature = "vendor-yubikey"))]
 pub(crate) mod yubikey;
 
-pub use crate::transport::any::{AnyToken, AnyTransport};
+pub use crate::transport::any::{AnyToken, AnyTokenId, AnyTokenInfo, AnyTransport};
 
 use async_trait::async_trait;
 use futures::stream::BoxStream;
