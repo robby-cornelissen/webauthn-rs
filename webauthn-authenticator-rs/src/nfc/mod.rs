@@ -569,7 +569,9 @@ impl NFCCard {
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NFCCardInfo {}
+pub struct NFCCardInfo {
+    card_issuer_data: Option<String>,
+}
 
 #[async_trait]
 impl Token for NFCCard {
@@ -677,7 +679,9 @@ impl Token for NFCCard {
     }
 
     fn get_info(&self) -> Self::Info {
-        NFCCardInfo {}
+        NFCCardInfo {
+            card_issuer_data: self.atr.card_issuers_data_str().map(str::to_string)
+        }
     }
 
     async fn cancel(&mut self) -> Result<(), WebauthnCError> {
