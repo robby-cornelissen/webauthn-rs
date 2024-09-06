@@ -570,6 +570,7 @@ impl NFCCard {
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NFCCardInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
     card_issuer_data: Option<String>,
 }
 
