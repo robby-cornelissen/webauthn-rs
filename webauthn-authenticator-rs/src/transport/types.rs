@@ -16,6 +16,8 @@ pub const U2FHID_CBOR: u8 = TYPE_INIT | 0x10;
 pub const U2FHID_CANCEL: u8 = TYPE_INIT | 0x11;
 #[cfg(any(all(doc, not(doctest)), feature = "usb"))]
 pub const U2FHID_KEEPALIVE: u8 = TYPE_INIT | 0x3b;
+#[cfg(any(all(doc, not(doctest)), feature = "usb"))]
+pub const U2FHID_WINK: u8 = TYPE_INIT | 0x08;
 #[cfg(any(doc, feature = "bluetooth"))]
 pub const BTLE_CANCEL: u8 = TYPE_INIT | 0x3e;
 pub const U2FHID_ERROR: u8 = TYPE_INIT | 0x3f;
@@ -31,6 +33,7 @@ pub enum Response {
     Cbor(CBORResponse),
     Error(U2FError),
     KeepAlive(KeepAliveStatus),
+    Wink,
     Unknown,
 }
 

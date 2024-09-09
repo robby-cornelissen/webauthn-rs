@@ -689,6 +689,10 @@ impl Token for NFCCard {
         // There does not appear to be a "cancel" command over NFC.
         Ok(())
     }
+
+    async fn wink(&mut self) -> Result<(), WebauthnCError> {
+        Err(WebauthnCError::NotSupported)
+    }
 }
 
 #[cfg(test)]

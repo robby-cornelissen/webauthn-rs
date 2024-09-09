@@ -679,6 +679,10 @@ impl Token for BluetoothToken {
         })
         .await
     }
+
+    async fn wink(&mut self) -> Result<(), WebauthnCError> {
+        Err(WebauthnCError::NotSupported)
+    }
 }
 
 impl Drop for BluetoothToken {

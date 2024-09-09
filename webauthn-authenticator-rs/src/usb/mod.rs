@@ -22,6 +22,7 @@ use fido_hid_rs::{
     HidReportBytes, HidSendReportBytes, USBDevice, USBDeviceImpl, USBDeviceInfo, USBDeviceInfoImpl,
     USBDeviceManager, USBDeviceManagerImpl, WatchEvent,
 };
+use types::U2FHID_WINK;
 
 use crate::error::WebauthnCError;
 use crate::transport::types::{KeepAliveStatus, Response, U2FHID_CANCEL, U2FHID_CBOR, U2FHID_INIT};
@@ -54,6 +55,7 @@ pub struct USBToken {
     cid: u32,
     supports_ctap1: bool,
     supports_ctap2: bool,
+    supports_wink: bool,
     initialised: bool,
 }
 
@@ -69,6 +71,7 @@ impl fmt::Debug for USBToken {
             .field("cid", &self.cid)
             .field("supports_ctap1", &self.supports_ctap1)
             .field("supports_ctap2", &self.supports_ctap2)
+            .field("supports_wink", &self.supports_wink)
             .field("initialised", &self.initialised)
             .finish()
     }
@@ -152,6 +155,7 @@ impl USBToken {
             cid: 0,
             supports_ctap1: false,
             supports_ctap2: false,
+            supports_wink: false,
             initialised: false,
         }
     }
@@ -203,6 +207,21 @@ impl USBToken {
         }
         Response::try_from(&f)
     }
+
+    async fn wink(&mut self) -> Result<(), WebauthnCError> {
+        if !self.initialised {
+            error!("attempted to cancel uninitialised token");
+            return Err(WebauthnCError::Internal);
+        }
+
+        let cmd = U2FHIDFrame {
+            cid: self.cid,
+            cmd: U2FHID_WINK,
+            len: 0,
+            data: vec![],
+        };
+        self.send_one(&cmd).await
+    }
 }
 
 #[async_trait]
@@ -210,6 +229,14 @@ impl Token for USBToken {
     // TODO: platform code
     type Id = <USBDeviceInfoImpl as USBDeviceInfo>::Id;
     type Info = USBDeviceInfoImpl;
+
+    fn get_transport(&self) -> AuthenticatorTransport {
+        AuthenticatorTransport::Usb
+    }
+
+    fn get_info(&self) -> Self::Info {
+        self.device.get_info().clone()
+    }
 
     async fn transmit_raw<U>(&mut self, cmd: &[u8], ui: &U) -> Result<Vec<u8>, WebauthnCError>
     where
@@ -289,6 +316,7 @@ impl Token for USBToken {
                 self.cid = i.cid;
                 self.supports_ctap1 = i.supports_ctap1();
                 self.supports_ctap2 = i.supports_ctap2();
+                self.supports_wink = i.supports_wink();
 
                 if self.supports_ctap2 {
                     self.initialised = true;
@@ -309,14 +337,6 @@ impl Token for USBToken {
         Ok(())
     }
 
-    fn get_transport(&self) -> AuthenticatorTransport {
-        AuthenticatorTransport::Usb
-    }
-
-    fn get_info(&self) -> Self::Info {
-        self.device.get_info().clone()
-    }
-
     async fn cancel(&mut self) -> Result<(), WebauthnCError> {
         if !self.initialised {
             error!("attempted to cancel uninitialised token");
@@ -330,5 +350,9 @@ impl Token for USBToken {
             data: vec![],
         };
         self.send_one(&cmd).await
+    }
+
+    async fn wink(&mut self) -> Result<(), WebauthnCError> {
+        self.wink().await
     }
 }

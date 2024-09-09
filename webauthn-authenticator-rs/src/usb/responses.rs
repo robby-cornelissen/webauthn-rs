@@ -4,13 +4,14 @@ use crate::transport::{
     iso7816::ISO7816ResponseAPDU,
     types::{
         CBORResponse, U2FError, U2FHID_CBOR, U2FHID_ERROR, U2FHID_KEEPALIVE, U2FHID_MSG,
-        U2FHID_PING,
+        U2FHID_PING, U2FHID_WINK
     },
     TYPE_INIT,
 };
 use crate::usb::framing::U2FHIDFrame;
 use crate::usb::*;
 
+const CAPABILITY_WINK: u8 = 0x01;
 const CAPABILITY_CBOR: u8 = 0x04;
 const CAPABILITY_NMSG: u8 = 0x08;
 
@@ -29,6 +30,10 @@ pub struct InitResponse {
 }
 
 impl InitResponse {
+    pub fn supports_wink(&self) -> bool {
+        self.capabilities & CAPABILITY_WINK > 0
+    }
+
     /// `true` if the device suports CTAPv1 / U2F protocol
     pub fn supports_ctap1(&self) -> bool {
         self.capabilities & CAPABILITY_NMSG == 0
@@ -86,6 +91,7 @@ impl TryFrom<&U2FHIDFrame> for Response {
             U2FHID_MSG => ISO7816ResponseAPDU::try_from(b).map(Response::Msg)?,
             U2FHID_CBOR => CBORResponse::try_from(b).map(Response::Cbor)?,
             U2FHID_KEEPALIVE => Response::KeepAlive(KeepAliveStatus::from(b)),
+            U2FHID_WINK => Response::Wink,
             U2FHID_ERROR => Response::Error(U2FError::from(b)),
             _ => {
                 error!(

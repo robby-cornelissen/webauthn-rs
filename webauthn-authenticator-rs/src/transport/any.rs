@@ -353,6 +353,18 @@ impl Token for AnyToken {
             AnyToken::Usb(u) => u.has_button(),
         }
     }
+
+    async fn wink(&mut self) -> Result<(), WebauthnCError> {
+        match self {
+            AnyToken::Stub => unimplemented!(),
+            #[cfg(feature = "bluetooth")]
+            AnyToken::Bluetooth(b) => b.wink().await,
+            #[cfg(feature = "nfc")]
+            AnyToken::Nfc(n) => n.wink().await,
+            #[cfg(feature = "usb")]
+            AnyToken::Usb(u) => u.wink().await,
+        }
+    }
 }
 
 #[cfg(feature = "bluetooth")]

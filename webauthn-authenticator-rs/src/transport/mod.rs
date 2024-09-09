@@ -111,4 +111,7 @@ pub trait Token: Sized + fmt::Debug + Sync + Send {
 
     /// Closes the [Token]
     async fn close(&mut self) -> Result<(), WebauthnCError>;
+
+    /// Winks the [Token]
+    async fn wink(&mut self) -> Result<(), WebauthnCError>;
 }

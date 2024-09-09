@@ -558,6 +558,12 @@ impl<'a, T: Token, U: UiCallback> Ctap20Authenticator<'a, T, U> {
         error!("got unexpected OK response from authenticator");
         Err(WebauthnCError::Internal)
     }
+
+    /// Performs a vendor-defined action that provides some visual or audible identification
+    /// for a particular authenticator. Only available for USB HID authenticators.
+    pub async fn wink(&mut self) -> Result<(), WebauthnCError> {
+        self.token.wink().await
+    }
 }
 
 impl<'a, T: Token, U: UiCallback> AuthenticatorBackendHashedClientData
