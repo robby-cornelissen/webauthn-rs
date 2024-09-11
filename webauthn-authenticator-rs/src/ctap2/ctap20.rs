@@ -4,7 +4,7 @@ use std::{collections::BTreeMap, fmt::Debug, mem::size_of};
 use crate::util::check_pin;
 use crate::{
     authenticator_hashed::AuthenticatorBackendHashedClientData,
-    ctap2::{commands::*, pin_uv::*, Ctap21Authenticator},
+    ctap2::{commands::*, pin_uv::*, Ctap21Authenticator, Ctap21PreAuthenticator},
     error::{CtapError, WebauthnCError},
     transport::Token,
     ui::UiCallback,
@@ -106,6 +106,48 @@ impl<'a, T: Token, U: UiCallback> Ctap20Authenticator<'a, T, U> {
     /// authenticator. This does not share the PIN with the authenticator.
     pub fn validate_pin(&self, pin: &str) -> Result<String, WebauthnCError> {
         check_pin(pin, self.info.get_min_pin_length())
+    }
+
+    #[cfg(any(all(doc, not(doctest)), feature = "ctap2-management"))]
+    /// Gets the number of PIN attempts remaining before PIN is disabled on the device.
+    pub async fn get_pin_retries(&mut self) -> Result<ClientPinResponse, WebauthnCError> {
+        let ui_callback = self.ui_callback;
+
+        let c = ClientPinRequest {
+            pin_uv_protocol: Some(1),
+            sub_command: ClientPinSubCommand::GetPinRetries,
+            ..Default::default()
+        };
+
+        let ret = self.token.transmit(c, ui_callback).await?;
+        Ok(ret)
+    }
+
+    #[cfg(any(all(doc, not(doctest)), feature = "ctap2-management"))]
+    /// Gets the number of UV attempts remaining before UV is disabled on the device.
+    /// Only supported on CTAP 2.1 authenticators with the UV option.
+    /// Could consider implementing this as a trait for ctap21 and ctap21_pre only.
+    pub async fn get_uv_retries(&mut self) -> Result<ClientPinResponse, WebauthnCError> {
+        let user_verification_configured = self.info.user_verification_configured();
+        let versions = &self.info.versions;
+
+        if !user_verification_configured
+            || (!versions.contains(Ctap21Authenticator::<'a, T, U>::VERSION)
+                && !versions.contains(Ctap21PreAuthenticator::<'a, T, U>::VERSION))
+        {
+            return Err(WebauthnCError::NotSupported);
+        }
+
+        let ui_callback = self.ui_callback;
+
+        let c = ClientPinRequest {
+            pin_uv_protocol: Some(1),
+            sub_command: ClientPinSubCommand::GetUvRetries,
+            ..Default::default()
+        };
+
+        let ret = self.token.transmit(c, ui_callback).await?;
+        Ok(ret)
     }
 
     #[cfg(any(all(doc, not(doctest)), feature = "ctap2-management"))]
