@@ -194,7 +194,7 @@ impl USBToken {
     /// Recives a [Response] from the device, handling fragmented [U2FHIDFrame]
     /// responses if needed.
     async fn recv(&mut self) -> Result<Response, WebauthnCError> {
-        // Recieve first chunk
+        // Receive first chunk
         let mut f = self.recv_one().await?;
         let mut s: usize = f.data.len();
         let t = usize::from(f.len);
@@ -220,7 +220,20 @@ impl USBToken {
             len: 0,
             data: vec![],
         };
-        self.send_one(&cmd).await
+        
+        self.send_one(&cmd).await?;
+
+        let f = self.recv_one().await?;
+        match Response::try_from(&f) {
+            Ok(r) => {
+                match r {
+                    Response::Wink => Ok(()),
+                    _ => Err(WebauthnCError::UnexpectedState),
+
+                }
+            },
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -284,6 +297,10 @@ impl Token for USBToken {
                     Err(e)
                 }
             }
+            // Response::Wink => {
+            //     info!("Winking authenticator");
+            //     Ok(vec![])
+            // }
             e => {
                 error!("Unhandled response type: {:?}", e);
                 Err(WebauthnCError::Cbor)
