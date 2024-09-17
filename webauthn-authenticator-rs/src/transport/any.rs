@@ -7,7 +7,7 @@ use crate::stubs::*;
 
 use async_stream::stream;
 use futures::{stream::FusedStream, StreamExt};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[cfg(any(all(doc, not(doctest)), feature = "bluetooth"))]
 use crate::bluetooth::*;
@@ -69,7 +69,7 @@ impl fmt::Display for AnyTokenId {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "UPPERCASE")]
 pub enum AnyTokenInfo {
     /// No-op stub entry, never used.
