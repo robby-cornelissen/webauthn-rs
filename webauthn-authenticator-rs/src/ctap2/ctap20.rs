@@ -86,8 +86,11 @@ impl<'a, T: Token, U: UiCallback> Ctap20Authenticator<'a, T, U> {
         let ui_callback = self.ui_callback;
         self.token
             .transmit(ResetRequest {}, ui_callback)
-            .await
-            .map(|_| ())
+            .await?;
+        
+        // Resetting token invalidates info.
+        self.refresh_info().await?;
+        Ok(())
     }
 
     #[cfg(any(all(doc, not(doctest)), feature = "ctap2-management"))]
