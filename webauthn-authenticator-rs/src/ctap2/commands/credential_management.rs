@@ -407,7 +407,7 @@ crate::deserialize_cbor!(CredentialManagementResponse);
 /// [`CredentialManagementAuthenticator::get_credentials_metadata()`][1].
 ///
 /// [1]: crate::ctap2::ctap21_cred::CredentialManagementAuthenticator::get_credentials_metadata
-#[derive(Deserialize, Debug, Default, PartialEq, Eq)]
+#[derive(Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 pub struct CredentialStorageMetadata {
     /// Number of discoverable credentials present on the authenticator.
     pub existing_resident_credentials_count: u32,
