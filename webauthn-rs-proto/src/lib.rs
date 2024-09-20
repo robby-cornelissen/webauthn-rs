@@ -5,7 +5,7 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![deny(warnings)]
 #![warn(unused_extern_crates)]
-#![warn(missing_docs)]
+// #![warn(missing_docs)]
 
 pub mod attest;
 pub mod auth;

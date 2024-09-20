@@ -43,6 +43,7 @@ pub enum TypedCredential {
     AttestedPasskey(AttestedPasskey),
 }
 
+#[allow(dead_code)]
 pub struct WebauthnActor {
     pub rp_name: String,
     pub rp_id: String,

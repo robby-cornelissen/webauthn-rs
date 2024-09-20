@@ -65,6 +65,7 @@ use btleplug::{
     platform::{Manager, Peripheral, PeripheralId},
 };
 use futures::{executor::block_on, stream::BoxStream, Stream, StreamExt};
+use serde::{Deserialize, Serialize};
 use tokio::{sync::mpsc, task::spawn};
 use tokio_stream::wrappers::ReceiverStream;
 use uuid::{uuid, Uuid};
@@ -455,7 +456,7 @@ impl BluetoothToken {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BluetoothTokenInfo {}
 

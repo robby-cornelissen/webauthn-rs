@@ -335,7 +335,7 @@ async fn main() {
         Opt::BioInfo(o) => {
             while let Some(event) = stream.next().await {
                 match event {
-                    TokenEvent::Added(i, t) => {
+                    TokenEvent::Added(_i, t) => {
                         let mut authenticator = match CtapAuthenticator::new(t, &ui).await {
                             Some(a) => a,
                             None => continue,
@@ -481,7 +481,7 @@ async fn main() {
             let metadata = token
                 .credential_management()
                 .unwrap()
-                .get_credentials_metadata()
+                .get_credentials_metadata(None)
                 .await
                 .expect("Error getting credential metadata");
             println!(
@@ -507,7 +507,7 @@ async fn main() {
                     hex::encode(hash),
                 )
             } else {
-                let rps = cm.enumerate_rps().await.expect("Error enumerating RPs");
+                let rps = cm.enumerate_rps(None).await.expect("Error enumerating RPs");
                 println!("{} RP{}:", rps.len(), if rps.len() != 1 { "s" } else { "" });
                 for rp in rps {
                     print!(

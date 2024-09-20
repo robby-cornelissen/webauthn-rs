@@ -144,13 +144,16 @@ pub trait CredentialManagementAuthenticator {
     fn check_credential_management_support(&self) -> Result<(), WebauthnCError>;
 
     /// Gets an authentication session for credential management.
-    async fn get_credential_management_auth_session(&mut self) -> Result<AuthSession, WebauthnCError>;
+    async fn get_credential_management_auth_session(
+        &mut self,
+    ) -> Result<AuthSession, WebauthnCError>;
 
     /// Gets metadata about the authenticator's discoverable credential storage.
     ///
     /// See [CredentialStorageMetadata] for more details.
     async fn get_credentials_metadata(
         &mut self,
+        auth_session: Option<&AuthSession>,
     ) -> Result<CredentialStorageMetadata, WebauthnCError>;
 
     /// Enumerates a list of all relying parties with discoverable credentials
@@ -165,7 +168,10 @@ pub trait CredentialManagementAuthenticator {
     ///
     /// [0]: CredentialManagementAuthenticator::enumerate_credentials_by_hash
     /// [1]: https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-errata-20220621.html#rpid-truncation
-    async fn enumerate_rps(&mut self) -> Result<Vec<RelyingPartyCM>, WebauthnCError>;
+    async fn enumerate_rps(
+        &mut self,
+        auth_session: Option<&AuthSession>,
+    ) -> Result<Vec<RelyingPartyCM>, WebauthnCError>;
 
     /// Enumerates all discoverable credentials on the authenticator for a
     /// relying party, by the SHA-256 hash of the relying party ID.
@@ -234,28 +240,47 @@ where
         Ok(())
     }
 
-    async fn get_credential_management_auth_session(&mut self) -> Result<AuthSession, WebauthnCError> {
+    async fn get_credential_management_auth_session(
+        &mut self,
+    ) -> Result<AuthSession, WebauthnCError> {
         self.get_pin_uv_auth_session(
             Permissions::CREDENTIAL_MANAGEMENT,
             None,
             UserVerificationPolicy::Required,
-        ).await
+        )
+        .await
     }
 
     async fn get_credentials_metadata(
         &mut self,
+        auth_session: Option<&AuthSession>,
     ) -> Result<CredentialStorageMetadata, WebauthnCError> {
         self.check_credential_management_support()?;
 
-        let r = self.cred_mgmt(CredSubCommand::GetCredsMetadata).await?;
+        let r = match auth_session {
+            Some(session) => {
+                self.cred_mgmt_with_session(CredSubCommand::GetCredsMetadata, session)
+                    .await?
+            }
+            None => self.cred_mgmt(CredSubCommand::GetCredsMetadata).await?
+        };
 
         r.storage_metadata
             .ok_or(WebauthnCError::MissingRequiredField)
     }
 
-    async fn enumerate_rps(&mut self) -> Result<Vec<RelyingPartyCM>, WebauthnCError> {
+    async fn enumerate_rps(
+        &mut self,
+        auth_session: Option<&AuthSession>,
+    ) -> Result<Vec<RelyingPartyCM>, WebauthnCError> {
         self.check_credential_management_support()?;
-        let r = self.cred_mgmt(CredSubCommand::EnumerateRPsBegin).await;
+        let r = match auth_session {
+            Some(session) => {
+                self.cred_mgmt_with_session(CredSubCommand::EnumerateRPsBegin, session)
+                    .await
+            }
+            None => self.cred_mgmt(CredSubCommand::EnumerateRPsBegin).await,
+        };
 
         // "If no discoverable credentials exist on the authenticator, return
         // CTAP2_ERR_NO_CREDENTIALS."
