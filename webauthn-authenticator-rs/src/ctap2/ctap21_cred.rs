@@ -143,6 +143,9 @@ pub trait CredentialManagementAuthenticator {
     /// credential management.
     fn check_credential_management_support(&self) -> Result<(), WebauthnCError>;
 
+    /// Gets an authentication session for credential management.
+    async fn get_credential_management_auth_session(&mut self) -> Result<AuthSession, WebauthnCError>;
+
     /// Gets metadata about the authenticator's discoverable credential storage.
     ///
     /// See [CredentialStorageMetadata] for more details.
@@ -229,6 +232,14 @@ where
         }
 
         Ok(())
+    }
+
+    async fn get_credential_management_auth_session(&mut self) -> Result<AuthSession, WebauthnCError> {
+        self.get_pin_uv_auth_session(
+            Permissions::CREDENTIAL_MANAGEMENT,
+            None,
+            UserVerificationPolicy::Required,
+        ).await
     }
 
     async fn get_credentials_metadata(

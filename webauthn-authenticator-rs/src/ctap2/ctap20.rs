@@ -25,7 +25,7 @@ use webauthn_rs_proto::{
 use super::internal::CtapAuthenticatorVersion;
 
 #[derive(Debug, Clone)]
-pub(super) enum AuthToken {
+pub enum AuthToken {
     /// No authentication token to be supplied
     None,
     /// `pinUvAuthProtocol`, `pinUvAuthToken`
@@ -44,7 +44,7 @@ impl AuthToken {
 }
 
 #[derive(Debug)]
-pub(super) enum AuthSession {
+pub enum AuthSession {
     None,
     /// `iface`, `pinToken`
     InterfaceToken(PinUvPlatformInterface, Vec<u8>),

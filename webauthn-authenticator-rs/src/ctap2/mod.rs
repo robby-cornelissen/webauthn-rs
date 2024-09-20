@@ -154,7 +154,7 @@ use self::{
 #[doc(inline)]
 pub use self::{
     commands::{CBORCommand, CBORResponse, GetInfoResponse},
-    ctap20::Ctap20Authenticator,
+    ctap20::{AuthSession, AuthToken, Ctap20Authenticator},
     ctap21::Ctap21Authenticator,
     ctap21pre::Ctap21PreAuthenticator,
 };
