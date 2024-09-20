@@ -503,7 +503,7 @@ async fn main() {
                 (cm.enumerate_credentials_by_rpid(&rpid).await, rpid)
             } else if let Some(hash) = o.hash {
                 (
-                    cm.enumerate_credentials_by_hash(hash).await,
+                    cm.enumerate_credentials_by_hash(hash, None).await,
                     hex::encode(hash),
                 )
             } else {

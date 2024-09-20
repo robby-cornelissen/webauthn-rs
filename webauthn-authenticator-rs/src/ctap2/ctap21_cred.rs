@@ -50,7 +50,6 @@ where
     ) -> Result<CredentialManagementResponse, WebauthnCError>;
 
     /// Send a [CredSubCommand] using a provided `pin_uv_auth_token` session.
-    #[allow(dead_code)]
     async fn cred_mgmt_with_session(
         &mut self,
         sub_command: CredSubCommand,
@@ -184,6 +183,7 @@ pub trait CredentialManagementAuthenticator {
     async fn enumerate_credentials_by_hash(
         &mut self,
         rp_id_hash: SHA256Hash,
+        auth_session: Option<&AuthSession>,
     ) -> Result<Vec<DiscoverableCredential>, WebauthnCError>;
 
     /// Enumerates all discoverable credentials on the authenticator for a
@@ -262,7 +262,7 @@ where
                 self.cred_mgmt_with_session(CredSubCommand::GetCredsMetadata, session)
                     .await?
             }
-            None => self.cred_mgmt(CredSubCommand::GetCredsMetadata).await?
+            None => self.cred_mgmt(CredSubCommand::GetCredsMetadata).await?,
         };
 
         r.storage_metadata
@@ -324,10 +324,15 @@ where
     async fn enumerate_credentials_by_hash(
         &mut self,
         rp_id_hash: SHA256Hash,
+        auth_session: Option<&AuthSession>,
     ) -> Result<Vec<DiscoverableCredential>, WebauthnCError> {
         self.check_credential_management_support()?;
-        enumerate_credentials_impl(self, CredSubCommand::EnumerateCredentialsBegin(rp_id_hash))
-            .await
+        enumerate_credentials_impl(
+            self,
+            CredSubCommand::EnumerateCredentialsBegin(rp_id_hash),
+            auth_session,
+        )
+        .await
     }
 
     async fn enumerate_credentials_by_rpid(
@@ -335,7 +340,12 @@ where
         rp_id: &str,
     ) -> Result<Vec<DiscoverableCredential>, WebauthnCError> {
         self.check_credential_management_support()?;
-        enumerate_credentials_impl(self, CredSubCommand::enumerate_credentials_by_rpid(rp_id)).await
+        enumerate_credentials_impl(
+            self,
+            CredSubCommand::enumerate_credentials_by_rpid(rp_id),
+            None,
+        )
+        .await
     }
 
     async fn delete_credential(
@@ -355,6 +365,7 @@ where
 async fn enumerate_credentials_impl<'a, K, T, U, R>(
     self_: &mut T,
     sub_command: CredSubCommand,
+    auth_session: Option<&AuthSession>,
 ) -> Result<Vec<DiscoverableCredential>, WebauthnCError>
 where
     K: Token,
@@ -364,7 +375,10 @@ where
     U: UiCallback + 'a,
     R: CredentialManagementRequestTrait,
 {
-    let r = self_.cred_mgmt(sub_command).await;
+    let r = match auth_session {
+        Some(session) => self_.cred_mgmt_with_session(sub_command, session).await,
+        None => self_.cred_mgmt(sub_command).await,
+    };
 
     // "If no discoverable credentials for this RP ID hash exist on this
     // authenticator, return CTAP2_ERR_NO_CREDENTIALS."
