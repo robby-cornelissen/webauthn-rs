@@ -16,10 +16,10 @@ use base64urlsafedata::Base64UrlSafeData;
 use futures::executor::block_on;
 
 use webauthn_rs_proto::{
-    AuthenticationExtensionsClientOutputs, AuthenticatorAssertionResponseRaw,
+    auth, AuthenticationExtensionsClientOutputs, AuthenticatorAssertionResponseRaw,
     AuthenticatorAttestationResponseRaw, PubKeyCredParams, PublicKeyCredential,
-    RegisterPublicKeyCredential, RegistrationExtensionsClientOutputs, RelyingParty, User,
-    UserVerificationPolicy,
+    RegisterPublicKeyCredential, RegistrationExtensionsClientOutputs, RelyingParty,
+    ResidentKeyRequirement, User, UserVerificationPolicy,
 };
 
 use super::internal::CtapAuthenticatorVersion;
@@ -84,10 +84,8 @@ impl<'a, T: Token, U: UiCallback> Ctap20Authenticator<'a, T, U> {
     /// Perform a factory reset of the token, deleting all data.
     pub async fn factory_reset(&mut self) -> Result<(), WebauthnCError> {
         let ui_callback = self.ui_callback;
-        self.token
-            .transmit(ResetRequest {}, ui_callback)
-            .await?;
-        
+        self.token.transmit(ResetRequest {}, ui_callback).await?;
+
         // Resetting token invalidates info.
         self.refresh_info().await?;
         Ok(())
@@ -629,12 +627,19 @@ impl<'a, T: Token, U: UiCallback> AuthenticatorBackendHashedClientData
             authenticator_selection.user_verification,
         ))?;
 
+        // Not quite sure about this, but leaving it in as legacy and implement our logic in the else branch.
+        // We should obtain regular PIN/UV tokens and can build the options map according to
+        // https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-errata-20220621.html#authenticatorMakeCredential
         let req_options = if let AuthToken::UvTrue = auth_token {
             // No pin_uv_auth_param, but verification is configured, so use it
             Some(BTreeMap::from([("uv".to_owned(), true)]))
         } else {
-            None
+            let rk = authenticator_selection.resident_key.is_some_and(|v| {
+                v == ResidentKeyRequirement::Required || v == ResidentKeyRequirement::Preferred
+            });
+            Some(BTreeMap::from([("rk".to_owned(), rk)]))
         };
+
         let (pin_uv_auth_proto, pin_uv_auth_param) = auth_token.into_pin_uv_params();
 
         let mc = MakeCredentialRequest {
