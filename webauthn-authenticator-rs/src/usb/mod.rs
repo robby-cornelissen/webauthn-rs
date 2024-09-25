@@ -38,7 +38,6 @@ use crate::stubs::*;
 
 use openssl::rand::rand_bytes;
 use std::fmt;
-use std::time::Duration;
 use webauthn_rs_proto::AuthenticatorTransport;
 
 pub(crate) use self::responses::InitResponse;
