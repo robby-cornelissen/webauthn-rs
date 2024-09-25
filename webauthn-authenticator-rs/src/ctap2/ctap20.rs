@@ -16,7 +16,7 @@ use base64urlsafedata::Base64UrlSafeData;
 use futures::executor::block_on;
 
 use webauthn_rs_proto::{
-    auth, AuthenticationExtensionsClientOutputs, AuthenticatorAssertionResponseRaw,
+    AuthenticationExtensionsClientOutputs, AuthenticatorAssertionResponseRaw,
     AuthenticatorAttestationResponseRaw, PubKeyCredParams, PublicKeyCredential,
     RegisterPublicKeyCredential, RegistrationExtensionsClientOutputs, RelyingParty,
     ResidentKeyRequirement, User, UserVerificationPolicy,
