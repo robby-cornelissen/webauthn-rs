@@ -280,7 +280,6 @@ impl Token for USBToken {
                     _ => (),
                 }
                 // TODO: maybe time out at some point
-                tokio::time::sleep(Duration::from_millis(10)).await;
             } else {
                 break resp;
             }
@@ -297,10 +296,6 @@ impl Token for USBToken {
                     Err(e)
                 }
             }
-            // Response::Wink => {
-            //     info!("Winking authenticator");
-            //     Ok(vec![])
-            // }
             e => {
                 error!("Unhandled response type: {:?}", e);
                 Err(WebauthnCError::Cbor)
