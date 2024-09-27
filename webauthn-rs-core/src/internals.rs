@@ -417,17 +417,17 @@ pub(crate) struct AttestationObjectInner<'a> {
 #[derive(Debug)]
 pub struct AttestationObject<T: Ceremony> {
     /// format.
-    pub(crate) fmt: String,
+    pub fmt: String,
     /// <https://w3c.github.io/webauthn/#generating-an-attestation-object>
-    pub(crate) att_stmt: serde_cbor_2::Value,
+    pub att_stmt: serde_cbor_2::Value,
     /// auth_data.
-    pub(crate) auth_data: AuthenticatorData<T>,
+    pub auth_data: AuthenticatorData<T>,
     /// auth_data_bytes.
-    pub(crate) auth_data_bytes: Vec<u8>,
+    pub auth_data_bytes: Vec<u8>,
     /// ep_att
-    pub(crate) _ep_att: Option<bool>,
+    pub _ep_att: Option<bool>,
     /// large_blob_key
-    pub(crate) _large_blob_key: Option<Vec<u8>>,
+    pub _large_blob_key: Option<Vec<u8>>,
 }
 
 impl<T: Ceremony> TryFrom<&[u8]> for AttestationObject<T> {
@@ -469,11 +469,13 @@ impl From<CredProtectResponse> for u8 {
     }
 }
 
-pub(crate) struct AuthenticatorAttestationResponse<T: Ceremony> {
-    pub(crate) attestation_object: AttestationObject<T>,
-    pub(crate) client_data_json: CollectedClientData,
-    pub(crate) client_data_json_bytes: Vec<u8>,
-    pub(crate) transports: Option<Vec<AuthenticatorTransport>>,
+#[allow(missing_docs)]
+#[derive(Debug)]
+pub struct AuthenticatorAttestationResponse<T: Ceremony> {
+    pub attestation_object: AttestationObject<T>,
+    pub client_data_json: CollectedClientData,
+    pub client_data_json_bytes: Vec<u8>,
+    pub transports: Option<Vec<AuthenticatorTransport>>,
 }
 
 impl<T: Ceremony> TryFrom<&AuthenticatorAttestationResponseRaw>
