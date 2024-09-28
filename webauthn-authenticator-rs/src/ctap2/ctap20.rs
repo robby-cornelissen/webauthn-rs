@@ -675,7 +675,7 @@ impl<'a, T: Token, U: UiCallback> AuthenticatorBackendHashedClientData
         let cred_id = vec![];
         let id = String::new();
 
-        let type_ = ret.fmt.ok_or(WebauthnCError::InvalidAlgorithm)?;
+        let type_ = "public-key".to_string();
 
         Ok(RegisterPublicKeyCredential {
             id,
