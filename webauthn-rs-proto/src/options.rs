@@ -2,7 +2,7 @@
 //! with the server.
 
 use base64urlsafedata::Base64UrlSafeData;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use std::fmt::Display;
 use std::{collections::BTreeMap, str::FromStr};
 
@@ -348,6 +348,7 @@ pub struct CollectedClientData {
     /// The challenge.
     pub challenge: Base64UrlSafeData,
     /// The rp origin as the browser understood it.
+    #[serde(serialize_with="serialize_without_trailing_slash")]
     pub origin: url::Url,
     /// The inverse of the sameOriginWithAncestors argument value that was
     /// passed into the internal method.
@@ -360,6 +361,17 @@ pub struct CollectedClientData {
     /// keys.
     #[serde(flatten)]
     pub unknown_keys: BTreeMap<String, serde_json::value::Value>,
+}
+
+/// Heavy-handed hack to remove trailing slash from a URL since some RPs (ahum) doesn't
+/// accept them.
+fn serialize_without_trailing_slash<S>(url: &url::Url, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let url_string = url.as_str().trim_end_matches('/');
+
+    s.serialize_str(url_string)
 }
 
 /*
