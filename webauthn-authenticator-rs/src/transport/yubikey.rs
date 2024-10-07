@@ -37,6 +37,7 @@ use async_trait::async_trait;
 use bitflags::bitflags;
 use num_traits::cast::FromPrimitive;
 use serde::Serialize;
+use serde_repr::Serialize_repr;
 
 use crate::{prelude::WebauthnCError, tlv::ber::BerTlvParser};
 
@@ -90,7 +91,7 @@ enum ConfigKey {
 /// YubiKey device form factor.
 ///
 /// Only the lower 3 bits of the `u8` are used.
-#[derive(Debug, Clone, PartialEq, Eq, Default, FromPrimitive, ToPrimitive, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, FromPrimitive, ToPrimitive, Serialize_repr)]
 #[repr(u8)]
 pub enum FormFactor {
     #[default]
