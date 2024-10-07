@@ -23,6 +23,7 @@ impl YubiKeyToken for USBToken {
         };
         self.send_one(&cmd).await?;
 
+        // Sneaky suspicion that newer firmware returns multiple frames
         let r = self.recv_one().await?;
         match r.cmd {
             CMD_GET_CONFIG => YubiKeyConfig::from_bytes(r.data.as_slice()),

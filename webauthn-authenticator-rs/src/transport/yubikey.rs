@@ -36,6 +36,7 @@
 use async_trait::async_trait;
 use bitflags::bitflags;
 use num_traits::cast::FromPrimitive;
+use serde::Serialize;
 
 use crate::{prelude::WebauthnCError, tlv::ber::BerTlvParser};
 
@@ -50,7 +51,8 @@ bitflags! {
     /// `ykman` calls these "Capabilities".
     ///
     /// Reference: <https://github.com/Yubico/yubikey-manager/blob/51a7ae438c923189788a1e31d3de18d452131942/yubikit/management.py#L62>
-    #[derive(Default)]
+    #[derive(Default, Serialize)]
+    #[serde(transparent)]
     pub struct Interface: u16 {
         const OTP = 0x01;
         const CTAP1 = 0x02;
@@ -88,7 +90,7 @@ enum ConfigKey {
 /// YubiKey device form factor.
 ///
 /// Only the lower 3 bits of the `u8` are used.
-#[derive(Debug, Clone, PartialEq, Eq, Default, FromPrimitive, ToPrimitive)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, FromPrimitive, ToPrimitive, Serialize)]
 #[repr(u8)]
 pub enum FormFactor {
     #[default]
@@ -121,7 +123,8 @@ pub enum FormFactor {
 /// * all tags use the universal class (0x00)
 /// * tag numbers are one of the values in [`ConfigKey`]
 /// * values are encoded directly
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all="camelCase")]
 pub struct YubiKeyConfig {
     /// Device serial number. This isn't available on all devices.
     pub serial: Option<u32>,
@@ -387,7 +390,7 @@ impl YubiKeyToken for AnyToken {
             #[cfg(feature = "bluetooth")]
             AnyToken::Bluetooth(_) => Err(WebauthnCError::NotSupported),
             #[cfg(feature = "nfc")]
-            AnyToken::Nfc(_) => Err(WebauthnCError::NotSupported),
+            AnyToken::Nfc(c) => c.get_yubikey_config().await,
             #[cfg(feature = "usb")]
             AnyToken::Usb(u) => u.get_yubikey_config().await,
         }

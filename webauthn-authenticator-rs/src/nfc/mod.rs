@@ -82,6 +82,7 @@ use webauthn_rs_proto::AuthenticatorTransport;
 
 mod atr;
 mod tlv;
+mod yubikey;
 
 pub use self::atr::*;
 use crate::transport::iso7816::*;

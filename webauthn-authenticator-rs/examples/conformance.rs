@@ -394,7 +394,7 @@ async fn main() -> Result<()> {
 
     while let Some(event) = events.next().await {
         match event {
-            TokenEvent::Added(token) => {
+            TokenEvent::Added(_, token) => {
                 // watch() ensures that we got a FIDO authenticator
                 test_card(token).await;
                 break;
