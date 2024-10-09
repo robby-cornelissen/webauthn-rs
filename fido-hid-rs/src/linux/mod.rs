@@ -179,14 +179,14 @@ impl USBDeviceManager for USBDeviceManagerImpl {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct USBDeviceInfoImpl {
-    path: Box<Path>,
-    vendor_id: u16,
-    product_id: u16,
-    version: Option<String>,
-    manufacturer: Option<String>,
-    product: Option<String>,
-    name: Option<String>,
-    serial: Option<String>,
+    pub path: Box<Path>,
+    pub vendor_id: u16,
+    pub product_id: u16,
+    pub version: Option<String>,
+    pub manufacturer: Option<String>,
+    pub product: Option<String>,
+    pub name: Option<String>,
+    pub serial: Option<String>,
 }
 
 impl USBDeviceInfoImpl {
