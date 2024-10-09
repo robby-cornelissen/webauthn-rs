@@ -190,9 +190,9 @@ impl USBToken {
         U2FHIDFrame::try_from(&ret)
     }
 
-    /// Recives a [Response] from the device, handling fragmented [U2FHIDFrame]
-    /// responses if needed.
-    async fn recv(&mut self) -> Result<Response, WebauthnCError> {
+    /// Receives a single [U2FHIDFrame] from the device, handling fragmented
+    /// [U2FHIDFrame] responses if needed.
+    async fn recv(&mut self) -> Result<U2FHIDFrame, WebauthnCError> {
         // Receive first chunk
         let mut f = self.recv_one().await?;
         let mut s: usize = f.data.len();
@@ -204,6 +204,13 @@ impl USBToken {
             s += n.data.len();
             f += n;
         }
+        Ok(f)
+    }
+
+    /// Receives a [Response] from the device.
+    async fn recv_response(&mut self) -> Result<Response, WebauthnCError> {
+        let f = self.recv().await?;
+
         Response::try_from(&f)
     }
 
@@ -219,17 +226,14 @@ impl USBToken {
             len: 0,
             data: vec![],
         };
-        
+
         self.send_one(&cmd).await?;
 
         let f = self.recv_one().await?;
         match Response::try_from(&f) {
-            Ok(r) => {
-                match r {
-                    Response::Wink => Ok(()),
-                    _ => Err(WebauthnCError::UnexpectedState),
-
-                }
+            Ok(r) => match r {
+                Response::Wink => Ok(()),
+                _ => Err(WebauthnCError::UnexpectedState),
             },
             Err(e) => Err(e),
         }
@@ -269,7 +273,7 @@ impl Token for USBToken {
 
         // Get a response, checking for keep-alive
         let resp = loop {
-            let resp = self.recv().await?;
+            let resp = self.recv_response().await?;
 
             if let Response::KeepAlive(r) = resp {
                 trace!("waiting for {:?}", r);
@@ -320,7 +324,7 @@ impl Token for USBToken {
         })
         .await?;
 
-        match self.recv().await? {
+        match self.recv_response().await? {
             Response::Init(i) => {
                 trace!(?i);
                 assert_eq!(&nonce, &i.nonce[..]);

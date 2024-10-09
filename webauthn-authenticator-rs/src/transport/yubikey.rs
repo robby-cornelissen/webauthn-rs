@@ -79,6 +79,8 @@ enum ConfigKey {
     ChallengeResponseTimeout = 0x7,
     DeviceFlags = 0x8,
     AppVersions = 0x9,
+    // more data is available
+    MoreData = 0x10,
     /// 16 bytes lock code, or indicates when a device is locked
     ConfigLock = 0xa,
     /// 16 bytes unlock code, to unlock a locked device
@@ -124,8 +126,8 @@ pub enum FormFactor {
 /// * all tags use the universal class (0x00)
 /// * tag numbers are one of the values in [`ConfigKey`]
 /// * values are encoded directly
-#[derive(Debug, Default, PartialEq, Eq, Serialize)]
-#[serde(rename_all="camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct YubiKeyConfig {
     /// Device serial number. This isn't available on all devices.
     pub serial: Option<u32>,
@@ -277,6 +279,7 @@ impl YubiKeyConfig {
                         o.enabled_nfc_interfaces = i;
                     }
                 }
+                ConfigKey::MoreData => continue,
             }
         }
 

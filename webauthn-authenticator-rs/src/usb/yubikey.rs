@@ -19,12 +19,12 @@ impl YubiKeyToken for USBToken {
             cid: self.cid,
             cmd: CMD_GET_CONFIG,
             len: 0,
+            // TODO need to iterate over pages here in case more data is present
             data: vec![],
         };
         self.send_one(&cmd).await?;
 
-        // Sneaky suspicion that newer firmware returns multiple frames
-        let r = self.recv_one().await?;
+        let r = self.recv().await?;
         match r.cmd {
             CMD_GET_CONFIG => YubiKeyConfig::from_bytes(r.data.as_slice()),
             U2FHID_ERROR => Err(U2FError::from(r.data.as_slice()).into()),
