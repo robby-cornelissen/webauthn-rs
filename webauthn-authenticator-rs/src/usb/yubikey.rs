@@ -15,20 +15,32 @@ use crate::{
 #[async_trait]
 impl YubiKeyToken for USBToken {
     async fn get_yubikey_config(&mut self) -> Result<YubiKeyConfig, WebauthnCError> {
-        let cmd = U2FHIDFrame {
-            cid: self.cid,
-            cmd: CMD_GET_CONFIG,
-            len: 0,
-            // TODO need to iterate over pages here in case more data is present
-            data: vec![],
-        };
-        self.send_one(&cmd).await?;
+        let mut yubikey_config = YubiKeyConfig::new();
+        let mut page = 0;
+        let mut more_data = true;
 
-        let r = self.recv().await?;
-        match r.cmd {
-            CMD_GET_CONFIG => YubiKeyConfig::from_bytes(r.data.as_slice()),
-            U2FHID_ERROR => Err(U2FError::from(r.data.as_slice()).into()),
-            _ => Err(WebauthnCError::UnexpectedState),
+        while more_data {
+            let cmd = U2FHIDFrame {
+                cid: self.cid,
+                cmd: CMD_GET_CONFIG,
+                len: 0,
+                data: vec![page],
+            };
+            self.send_one(&cmd).await?;
+
+            let r = self.recv().await?;
+            match r.cmd {
+                CMD_GET_CONFIG => {
+                    match yubikey_config.add_from_bytes(r.data.as_slice())? {
+                        true => page += 1,
+                        false => more_data = false,
+                    }
+                },
+                U2FHID_ERROR => return Err(U2FError::from(r.data.as_slice()).into()),
+                _ => return Err(WebauthnCError::UnexpectedState),
+            }
         }
+
+        Ok(yubikey_config)
     }
 }

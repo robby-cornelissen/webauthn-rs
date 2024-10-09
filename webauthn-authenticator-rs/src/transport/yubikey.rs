@@ -161,7 +161,7 @@ impl YubiKeyConfig {
         Default::default()
     }
 
-    pub fn add_from_bytes(&mut self, b: &[u8]) -> Result<(), WebauthnCError> {
+    pub fn add_from_bytes(&mut self, b: &[u8]) -> Result<bool, WebauthnCError> {
         if b.is_empty() {
             return Err(WebauthnCError::InvalidMessageLength);
         }
@@ -170,6 +170,7 @@ impl YubiKeyConfig {
             return Err(WebauthnCError::InvalidMessageLength);
         }
 
+        let mut more_data = false;
         let parser = BerTlvParser::new(&b[1..]);
 
         for (cls, constructed, tag, val) in parser {
@@ -279,11 +280,13 @@ impl YubiKeyConfig {
                         self.enabled_nfc_interfaces = i;
                     }
                 }
-                ConfigKey::MoreData => continue,
+                ConfigKey::MoreData => {
+                    println!("{:?}", val);
+                },
             }
         }
 
-        Ok(())
+        Ok(more_data)
     }
 
     pub fn from_bytes(b: &[u8]) -> Result<Self, WebauthnCError> {
