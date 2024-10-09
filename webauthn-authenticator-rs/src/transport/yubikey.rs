@@ -1,4 +1,3 @@
-//! YubiKey vendor-specific commands.
 //!
 //! This currently only supports YubiKey 5 and later. Older keys have different
 //! config formats and protocols, some firmwares give bogus data.
@@ -158,7 +157,11 @@ pub struct YubiKeyConfig {
 }
 
 impl YubiKeyConfig {
-    pub fn from_bytes(b: &[u8]) -> Result<Self, WebauthnCError> {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn add_from_bytes(&mut self, b: &[u8]) -> Result<(), WebauthnCError> {
         if b.is_empty() {
             return Err(WebauthnCError::InvalidMessageLength);
         }
@@ -167,9 +170,6 @@ impl YubiKeyConfig {
             return Err(WebauthnCError::InvalidMessageLength);
         }
 
-        let mut o = YubiKeyConfig {
-            ..Default::default()
-        };
         let parser = BerTlvParser::new(&b[1..]);
 
         for (cls, constructed, tag, val) in parser {
@@ -191,14 +191,14 @@ impl YubiKeyConfig {
                             .map_err(|_| WebauthnCError::InvalidMessageLength)?,
                     );
                     if let Some(i) = Interface::from_bits(v & Interface::all().bits()) {
-                        o.supported_usb_interfaces = i;
+                        self.supported_usb_interfaces = i;
                     }
                 }
                 ConfigKey::Serial => {
                     if val.len() != 4 {
                         continue;
                     }
-                    o.serial = val.try_into().map(u32::from_be_bytes).ok();
+                    self.serial = val.try_into().map(u32::from_be_bytes).ok();
                 }
                 ConfigKey::EnabledUsbInterfaces => {
                     if val.len() != 2 {
@@ -209,7 +209,7 @@ impl YubiKeyConfig {
                             .map_err(|_| WebauthnCError::InvalidMessageLength)?,
                     );
                     if let Some(i) = Interface::from_bits(v & Interface::all().bits()) {
-                        o.enabled_usb_interfaces = i;
+                        self.enabled_usb_interfaces = i;
                     }
                 }
                 ConfigKey::FormFactor => {
@@ -217,32 +217,32 @@ impl YubiKeyConfig {
                         continue;
                     }
                     if let Some(f) = FormFactor::from_u8(val[0] & 0x7) {
-                        o.form_factor = f;
+                        self.form_factor = f;
                     }
-                    o.is_fips = val[0] & 0x80 != 0;
-                    o.is_security_key = val[0] & 0x40 != 0;
+                    self.is_fips = val[0] & 0x80 != 0;
+                    self.is_security_key = val[0] & 0x40 != 0;
                 }
                 ConfigKey::Version => {
                     if let Ok(v) = val.try_into() {
-                        o.version = v;
+                        self.version = v;
                     }
                 }
                 ConfigKey::AutoEjectTimeout => {
                     if let Some(v) = variable_be_bytes_to_u16(val) {
-                        o.auto_eject_timeout = v;
+                        self.auto_eject_timeout = v;
                     }
                 }
                 ConfigKey::ChallengeResponseTimeout => {
                     if let Some(v) = variable_be_bytes_to_u16(val) {
-                        o.challenge_response_timeout = v;
+                        self.challenge_response_timeout = v;
                     }
                 }
                 ConfigKey::DeviceFlags => {
                     if val.is_empty() {
                         continue;
                     }
-                    o.supports_remote_wakeup = val[0] & 0x40 != 0;
-                    o.supports_eject = val[0] & 0x80 != 0;
+                    self.supports_remote_wakeup = val[0] & 0x40 != 0;
+                    self.supports_eject = val[0] & 0x80 != 0;
                 }
                 ConfigKey::AppVersions => {
                     continue;
@@ -251,7 +251,7 @@ impl YubiKeyConfig {
                     if val.is_empty() {
                         continue;
                     }
-                    o.is_locked = val[0] == 1;
+                    self.is_locked = val[0] == 1;
                 }
                 ConfigKey::Unlock => continue,
                 ConfigKey::Reboot => continue,
@@ -264,7 +264,7 @@ impl YubiKeyConfig {
                             .map_err(|_| WebauthnCError::InvalidMessageLength)?,
                     );
                     if let Some(i) = Interface::from_bits(v & Interface::all().bits()) {
-                        o.supported_nfc_interfaces = i;
+                        self.supported_nfc_interfaces = i;
                     }
                 }
                 ConfigKey::EnabledNfcInterfaces => {
@@ -276,14 +276,21 @@ impl YubiKeyConfig {
                             .map_err(|_| WebauthnCError::InvalidMessageLength)?,
                     );
                     if let Some(i) = Interface::from_bits(v & Interface::all().bits()) {
-                        o.enabled_nfc_interfaces = i;
+                        self.enabled_nfc_interfaces = i;
                     }
                 }
                 ConfigKey::MoreData => continue,
             }
         }
 
-        Ok(o)
+        Ok(())
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<Self, WebauthnCError> {
+        let mut yubikey_config = YubiKeyConfig::new();
+        yubikey_config.add_from_bytes(b)?;
+
+        Ok(yubikey_config)
     }
 
     pub fn is_preview(&self) -> bool {
