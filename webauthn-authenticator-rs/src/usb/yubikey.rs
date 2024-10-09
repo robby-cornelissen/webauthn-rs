@@ -23,7 +23,7 @@ impl YubiKeyToken for USBToken {
             let cmd = U2FHIDFrame {
                 cid: self.cid,
                 cmd: CMD_GET_CONFIG,
-                len: 0,
+                len: 1,
                 data: vec![page],
             };
             self.send_one(&cmd).await?;

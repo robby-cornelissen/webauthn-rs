@@ -281,7 +281,9 @@ impl YubiKeyConfig {
                     }
                 }
                 ConfigKey::MoreData => {
-                    println!("{:?}", val);
+                    if val[0] == 1 {
+                        more_data = true;
+                    }
                 },
             }
         }
