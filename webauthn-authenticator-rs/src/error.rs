@@ -151,66 +151,103 @@ impl From<crate::transport::types::U2FError> for WebauthnCError {
 }
 
 /// <https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-errata-20220621.html#error-responses>
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum CtapError {
-    /// Indicates successful response.
+    #[error("Indicates successful response.")]
     Ok,
-    /// The command is not a valid CTAP command.
+    #[error("The command is not a valid CTAP command.")]
     Ctap1InvalidCommand,
-    /// The command included an invalid parameter.
+    #[error("The command included an invalid parameter.")]
     Ctap1InvalidParameter,
-    /// Invalid message or item length.
+    #[error("Invalid message or item length.")]
     Ctap1InvalidLength,
-    /// Invalid message sequencing.
+    #[error("Invalid message sequencing.")]
     Ctap1InvalidSeq,
-    /// Message timed out.
+    #[error("Message timed out.")]
     Ctap1Timeout,
-    /// Channel busy. Client SHOULD retry the request after a short delay.
-    /// Note that the client MAY abort the transaction if the command is no longer relevant.
+    #[error("Channel busy. Client SHOULD retry the request after a short delay. Note that the client may abort the transaction if the command is no longer relevant.")]
     Ctap1ChannelBusy,
-    /// Command not allowed on this cid.
+    #[error("Command requires channel lock.")]
     Ctap1LockRequired,
-    /// Command not allowed on this cid.
+    #[error("Command not allowed on this cid.")]
     Ctap1InvalidChannel,
+    #[error("Invalid/unexpected CBOR error.")]
     Ctap2CborUnexpectedType,
+    #[error("Error when parsing CBOR.")]
     Ctap2InvalidCBOR,
+    #[error("Missing non-optional parameter")]
     Ctap2MissingParameter,
+    #[error("Limit for number of items exceeded.")]
     Ctap2LimitExceeded,
+    #[error("Fingerprint database is full, e.g., during enrollment.")]
     Ctap2FingerprintDatabaseFull,
+    #[error("Large blob storage is full.")]
     Ctap2LargeBlobStorageFull,
+    #[error("Valid credential found in the exclude list.")]
     Ctap2CredentialExcluded,
+    #[error("Processing (lengthy operation is in progress).")]
     Ctap2Processing,
+    #[error("Credential not valid for the authenticator")]
     Ctap2InvalidCredential,
+    #[error("Authentication is waiting for user interaction.")]
     Ctap2UserActionPending,
+    #[error("Processing, lengthy operation is in progress.")]
     Ctap2OperationPending,
+    #[error("No request is pending.")]
     Ctap2NoOperations,
+    #[error("Authenticator does not support requested algorithm.")]
     Ctap2UnsupportedAlgorithm,
+    #[error("Not authorized for requested operation.")]
     Ctap2OperationDenied,
+    #[error("Internal key storage is full")]
     Ctap2KeyStoreFull,
+    #[error("Unsupported option.")]
     Ctap2UnsupportedOption,
+    #[error("Not a valid option for current operation.")]
     Ctap2InvalidOption,
+    #[error("Pending keep alive was cancelled.")]
     Ctap2KeepAliveCancel,
+    #[error("No valid credentials provided.")]
     Ctap2NoCredentials,
+    #[error("A user action timeout occurred.")]
     Ctap2UserActionTimeout,
+    #[error("Continuation command, such as, authenticatorGetNextAssertion not allowed.")]
     Ctap2NotAllowed,
+    #[error("PIN invalid.")]
     Ctap2PinInvalid,
+    #[error("PIN blocked.")]
     Ctap2PinBlocked,
+    #[error("PIN authentication, pinUvAuthParam, verification failed.")]
     Ctap2PinAuthInvalid,
+    #[error("PIN authentication using pinUvAuthToken blocked. Requires power cycle to reset.")]
     Ctap2PinAuthBlocked,
+    #[error("No PIN has been set.")]
     Ctap2PinNotSet,
+    #[error("A pinUvAuthToken is required for the selected operation.")]
     Ctap2PUATRequired,
+    #[error("PIN policy violation.")]
     Ctap2PinPolicyViolation,
+    #[error("Authenticator cannot handle this request due to memory constraints.")]
     Ctap2RequestTooLarge,
+    #[error("The current operation has timed out.")]
     Ctap2ActionTimeout,
+    #[error("User presence is required for the requested operation.")]
     Ctap2UserPresenceRequired,
+    #[error("Built-in user verification is disabled.")]
     Ctap2UserVerificationBlocked,
+    #[error("A checksum did not match.")]
     Ctap2IntegrityFailure,
+    #[error("The requested subcommand is either invalid or not implemented.")]
     Ctap2InvalidSubcommand,
+    #[error("Built-in user verification unsuccessful. The platform SHOULD retry.")]
     Ctap2UserVerificationInvalid,
+    #[error("The permissions parameter contains an unauthorized permission.")]
     Ctap2UnauthorizedPermission,
+    #[error("Other unspecified error.")]
     Ctap1Unspecified,
+    #[error("Other unspecified error.")]
     Ctap2LastError,
-    /// The error code was unknown
+    #[error("Unknown CTAP error.")]
     Unknown(u8),
 }
 
