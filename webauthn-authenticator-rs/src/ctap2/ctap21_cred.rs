@@ -101,9 +101,8 @@ where
     ) -> Result<CredentialManagementResponse, WebauthnCError> {
         let (pin_uv_protocol, pin_uv_auth_param) = match auth_session {
             AuthSession::InterfaceToken(iface, pin_token) => {
-                let mut pin_uv_auth_param =
+                let pin_uv_auth_param =
                     iface.authenticate(pin_token, sub_command.prf().as_slice())?;
-                pin_uv_auth_param.truncate(16);
 
                 (Some(iface.get_pin_uv_protocol()), Some(pin_uv_auth_param))
             }
